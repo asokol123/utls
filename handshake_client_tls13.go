@@ -62,6 +62,7 @@ func (hs *clientHandshakeStateTLS13) handshake() error {
 	hs.transcript = hs.suite.hash.New()
 	hs.transcript.Write(hs.hello.marshal())
 
+	c.buffering = true
 	if bytes.Equal(hs.serverHello.random, helloRetryRequestRandom) {
 		if err := hs.sendDummyChangeCipherSpec(); err != nil {
 			return err
@@ -73,7 +74,6 @@ func (hs *clientHandshakeStateTLS13) handshake() error {
 
 	hs.transcript.Write(hs.serverHello.marshal())
 
-	c.buffering = true
 	if err := hs.processServerHello(); err != nil {
 		return err
 	}
@@ -319,6 +319,7 @@ func (hs *clientHandshakeStateTLS13) processHelloRetryRequest() error {
 	if _, err := c.writeRecord(recordTypeHandshake, hs.hello.marshal()); err != nil {
 		return err
 	}
+	c.flush()
 
 	msg, err := c.readHandshake()
 	if err != nil {
