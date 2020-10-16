@@ -17,7 +17,7 @@ import (
 	"golang.org/x/crypto/cryptobyte"
 )
 
-func utlsIdToSpec(id ClientHelloID) (ClientHelloSpec, error) {
+func UtlsIdToSpec(id ClientHelloID) (ClientHelloSpec, error) {
 	switch id {
 	case HelloChrome_58, HelloChrome_62:
 		return ClientHelloSpec{
@@ -971,7 +971,7 @@ func (uconn *UConn) applyPresetByID(id ClientHelloID) (err error) {
 		return nil
 
 	default:
-		spec, err = utlsIdToSpec(id)
+		spec, err = UtlsIdToSpec(id)
 		if err != nil {
 			return err
 		}
