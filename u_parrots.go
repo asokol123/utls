@@ -12,6 +12,9 @@ import (
 	"io"
 	"sort"
 	"strconv"
+	"strings"
+
+	"golang.org/x/crypto/cryptobyte"
 )
 
 func utlsIdToSpec(id ClientHelloID) (ClientHelloSpec, error) {
@@ -524,6 +527,431 @@ func utlsIdToSpec(id ClientHelloID) (ClientHelloSpec, error) {
 				}},
 			},
 		}, nil
+	case HelloEdge_85:
+		return ClientHelloSpec{
+			CipherSuites: []uint16{
+				GREASE_PLACEHOLDER,
+				TLS_AES_128_GCM_SHA256,
+				TLS_AES_256_GCM_SHA384,
+				TLS_CHACHA20_POLY1305_SHA256,
+				TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+				TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+				TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+				TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+				TLS_RSA_WITH_AES_128_GCM_SHA256,
+				TLS_RSA_WITH_AES_256_GCM_SHA384,
+				TLS_RSA_WITH_AES_128_CBC_SHA,
+				TLS_RSA_WITH_AES_256_CBC_SHA,
+			},
+			CompressionMethods: []uint8{
+				0x0, // no compression
+			},
+			Extensions: []TLSExtension{
+				&UtlsGREASEExtension{},
+				&SNIExtension{},
+				&UtlsExtendedMasterSecretExtension{},
+				&RenegotiationInfoExtension{
+					Renegotiation: RenegotiateOnceAsClient,
+				},
+				&SupportedCurvesExtension{
+					Curves: []CurveID{
+						GREASE_PLACEHOLDER,
+						X25519,
+						CurveP256,
+						CurveP384,
+					},
+				},
+				&SupportedPointsExtension{
+					SupportedPoints: []uint8{
+						0x0, // pointFormatUncompressed
+					},
+				},
+				&SessionTicketExtension{},
+				&ALPNExtension{
+					AlpnProtocols: []string{
+						"h2",
+						"http/1.1",
+					},
+				},
+				&StatusRequestExtension{},
+				&SignatureAlgorithmsExtension{
+					SupportedSignatureAlgorithms: []SignatureScheme{
+						ECDSAWithP256AndSHA256,
+						PSSWithSHA256,
+						PKCS1WithSHA256,
+						ECDSAWithP384AndSHA384,
+						PSSWithSHA384,
+						PKCS1WithSHA384,
+						PSSWithSHA512,
+						PKCS1WithSHA512,
+					},
+				},
+				&SCTExtension{},
+				&KeyShareExtension{
+					KeyShares: []KeyShare{
+						{
+							Group: GREASE_PLACEHOLDER,
+							Data: []byte{
+								0,
+							},
+						},
+						{
+							Group: X25519,
+						},
+					},
+				},
+				&PSKKeyExchangeModesExtension{
+					Modes: []uint8{
+						PskModeDHE,
+					},
+				},
+				&SupportedVersionsExtension{
+					Versions: []uint16{
+						GREASE_PLACEHOLDER,
+						VersionTLS13,
+						VersionTLS12,
+						VersionTLS11,
+						VersionTLS10,
+					},
+				},
+				&GenericExtension{
+					// Certificate Compression:
+					// https://tools.ietf.org/html/draft-ietf-tls-certificate-compression-10
+					Id: 27,
+					Data: []byte{
+						2, 0, 2,
+					},
+				},
+				&UtlsGREASEExtension{},
+				&UtlsPaddingExtension{
+					GetPaddingLen: BoringPaddingStyle,
+				},
+			},
+		}, nil
+	case HelloSafari_13_1:
+		return ClientHelloSpec{
+			CipherSuites: []uint16{
+				TLS_AES_128_GCM_SHA256,
+				TLS_AES_256_GCM_SHA384,
+				TLS_CHACHA20_POLY1305_SHA256,
+				TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				DISABLED_TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384,
+				TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+				TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+				TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+				TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+				TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				DISABLED_TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,
+				TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+				TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+				TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+				TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+				TLS_RSA_WITH_AES_256_GCM_SHA384,
+				TLS_RSA_WITH_AES_128_GCM_SHA256,
+				DISABLED_TLS_RSA_WITH_AES_256_CBC_SHA256,
+				TLS_RSA_WITH_AES_128_CBC_SHA256,
+				TLS_RSA_WITH_AES_256_CBC_SHA,
+				TLS_RSA_WITH_AES_128_CBC_SHA,
+				FAKE_TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA,
+				TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+				TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+			},
+			CompressionMethods: []uint8{
+				0x0, // no compression
+			},
+			Extensions: []TLSExtension{
+				&RenegotiationInfoExtension{
+					Renegotiation: RenegotiateOnceAsClient,
+				},
+				&SNIExtension{},
+				&UtlsExtendedMasterSecretExtension{},
+				&SignatureAlgorithmsExtension{
+					SupportedSignatureAlgorithms: []SignatureScheme{
+						ECDSAWithP256AndSHA256,
+						PSSWithSHA256,
+						PKCS1WithSHA256,
+						ECDSAWithP384AndSHA384,
+						ECDSAWithSHA1,
+						PSSWithSHA384,
+						PSSWithSHA384,
+						PKCS1WithSHA384,
+						PSSWithSHA512,
+						PKCS1WithSHA512,
+						PKCS1WithSHA1,
+					},
+				},
+				&StatusRequestExtension{},
+				&SCTExtension{},
+				&ALPNExtension{
+					AlpnProtocols: []string{
+						"h2",
+						"http/1.1",
+					},
+				},
+				&SupportedPointsExtension{
+					SupportedPoints: []uint8{
+						0x0, // pointFormatUncompressed
+					},
+				},
+				&KeyShareExtension{
+					KeyShares: []KeyShare{
+						{
+							Group: X25519,
+						},
+					},
+				},
+				&PSKKeyExchangeModesExtension{
+					Modes: []uint8{
+						PskModeDHE,
+					},
+				},
+				&SupportedVersionsExtension{
+					Versions: []uint16{
+						VersionTLS13,
+						VersionTLS12,
+						VersionTLS11,
+						VersionTLS10,
+					},
+				},
+				&SupportedCurvesExtension{
+					Curves: []CurveID{
+						X25519,
+						CurveP256,
+						CurveP384,
+						CurveP521,
+					},
+				},
+				&UtlsPaddingExtension{
+					GetPaddingLen: BoringPaddingStyle,
+				},
+			},
+		}, nil
+	case HelloExplorer_11:
+		return ClientHelloSpec{
+			CipherSuites: []uint16{
+				TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				FAKE_TLS_DHE_RSA_WITH_AES_256_GCM_SHA384,
+				FAKE_TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,
+				DISABLED_TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384,
+				TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+				DISABLED_TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,
+				TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+				TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+				TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+				TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+				TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+				TLS_RSA_WITH_AES_256_GCM_SHA384,
+				TLS_RSA_WITH_AES_128_GCM_SHA256,
+				DISABLED_TLS_RSA_WITH_AES_256_CBC_SHA256,
+				TLS_RSA_WITH_AES_128_CBC_SHA256,
+				TLS_RSA_WITH_AES_256_CBC_SHA,
+				TLS_RSA_WITH_AES_128_CBC_SHA,
+				TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+			},
+			CompressionMethods: []uint8{
+				0x0, // no compression
+			},
+			Extensions: []TLSExtension{
+				&SNIExtension{},
+				&StatusRequestExtension{},
+				&SupportedCurvesExtension{
+					Curves: []CurveID{
+						X25519,
+						CurveP256,
+						CurveP384,
+					},
+				},
+				&SupportedPointsExtension{
+					SupportedPoints: []uint8{
+						0x0, // pointFormatUncompressed
+					},
+				},
+				&SignatureAlgorithmsExtension{
+					SupportedSignatureAlgorithms: []SignatureScheme{
+						PKCS1WithSHA512,
+						ECDSAWithP521AndSHA512,
+						PKCS1WithSHA256,
+						PKCS1WithSHA384,
+						PKCS1WithSHA1,
+						ECDSAWithP256AndSHA256,
+						ECDSAWithP384AndSHA384,
+						ECDSAWithSHA1,
+						FakeSHA1WithDSA,
+					},
+				},
+				&SessionTicketExtension{},
+				&ALPNExtension{
+					AlpnProtocols: []string{
+						"h2",
+						"http/1.1",
+					},
+				},
+				&UtlsExtendedMasterSecretExtension{},
+				&FakeTokenBindingExtension{
+					MajorVersion: 0,
+					MinorVersion: 16,
+					KeyParameters: []uint8{
+						2, 1, 0,
+					},
+				},
+				&RenegotiationInfoExtension{
+					Renegotiation: RenegotiateOnceAsClient,
+				},
+			},
+		}, nil
+	case Hello360_7_5:
+		return ClientHelloSpec{
+			CipherSuites: []uint16{
+				TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+				TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+				FAKE_TLS_DHE_RSA_WITH_AES_256_CBC_SHA,
+				FAKE_TLS_DHE_RSA_WITH_AES_256_CBC_SHA256,
+				TLS_RSA_WITH_AES_256_CBC_SHA,
+				DISABLED_TLS_RSA_WITH_AES_256_CBC_SHA256,
+				TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
+				TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+				TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+				TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+				TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+				TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+				FAKE_TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
+				FAKE_TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,
+				FAKE_TLS_DHE_DSS_WITH_AES_128_CBC_SHA,
+				TLS_RSA_WITH_RC4_128_SHA,
+				FAKE_TLS_RSA_WITH_RC4_128_MD5,
+				TLS_RSA_WITH_AES_128_CBC_SHA,
+				TLS_RSA_WITH_AES_128_CBC_SHA256,
+				TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+			},
+			CompressionMethods: []uint8{
+				0x0, // no compression
+			},
+			Extensions: []TLSExtension{
+				&SNIExtension{},
+				&RenegotiationInfoExtension{
+					Renegotiation: RenegotiateOnceAsClient,
+				},
+				&SupportedCurvesExtension{
+					Curves: []CurveID{
+						CurveP256,
+						CurveP384,
+						CurveP521,
+					},
+				},
+				&SupportedPointsExtension{
+					SupportedPoints: []uint8{
+						0x0, // pointFormatUncompressed
+					},
+				},
+				&SessionTicketExtension{},
+				&NPNExtension{},
+				&ALPNExtension{
+					AlpnProtocols: []string{
+						"spdy/2",
+						"spdy/3",
+						"spdy/3.1",
+						"http/1.1",
+					},
+				},
+				&FakeChannelIDExtension{
+					OldExtensionID: true,
+				},
+				&StatusRequestExtension{},
+				&SignatureAlgorithmsExtension{
+					SupportedSignatureAlgorithms: []SignatureScheme{
+						PKCS1WithSHA256,
+						PKCS1WithSHA384,
+						PKCS1WithSHA1,
+						ECDSAWithP256AndSHA256,
+						ECDSAWithP384AndSHA384,
+						ECDSAWithSHA1,
+						FakeSHA256WithDSA,
+						FakeSHA1WithDSA,
+					},
+				},
+			},
+		}, nil
+	case HelloQQ_10_6:
+		return ClientHelloSpec{
+			CipherSuites: []uint16{
+				GREASE_PLACEHOLDER,
+				TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+				TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+				TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+				TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+				TLS_RSA_WITH_AES_128_GCM_SHA256,
+				TLS_RSA_WITH_AES_256_GCM_SHA384,
+				TLS_RSA_WITH_AES_128_CBC_SHA,
+				TLS_RSA_WITH_AES_256_CBC_SHA,
+				TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+			},
+			CompressionMethods: []uint8{
+				0x0, // no compression
+			},
+			Extensions: []TLSExtension{
+				&UtlsGREASEExtension{},
+				&RenegotiationInfoExtension{
+					Renegotiation: RenegotiateOnceAsClient,
+				},
+				&SNIExtension{},
+				&UtlsExtendedMasterSecretExtension{},
+				&SessionTicketExtension{},
+				&SignatureAlgorithmsExtension{
+					SupportedSignatureAlgorithms: []SignatureScheme{
+						ECDSAWithP256AndSHA256,
+						PSSWithSHA256,
+						PKCS1WithSHA256,
+						ECDSAWithP384AndSHA384,
+						PSSWithSHA384,
+						PKCS1WithSHA384,
+						PSSWithSHA512,
+						PKCS1WithSHA512,
+						PKCS1WithSHA1,
+					},
+				},
+				&StatusRequestExtension{},
+				&SCTExtension{},
+				&ALPNExtension{
+					AlpnProtocols: []string{
+						"h2",
+						"http/1.1",
+					},
+				},
+				&FakeChannelIDExtension{},
+				&SupportedPointsExtension{
+					SupportedPoints: []uint8{
+						0x0, // pointFormatUncompressed
+					},
+				},
+				&SupportedCurvesExtension{
+					Curves: []CurveID{
+						GREASE_PLACEHOLDER,
+						X25519,
+						CurveP256,
+						CurveP384,
+					},
+				},
+				&FakeCertCompressionAlgsExtension{
+					Methods: []CertCompressionAlgo{
+						CertCompressionBrotli,
+					},
+				},
+				&UtlsGREASEExtension{},
+			},
+		}, nil
 	default:
 		return ClientHelloSpec{}, errors.New("ClientHello ID " + id.Str() + " is unknown")
 	}
@@ -937,4 +1365,307 @@ func removeRC4Ciphers(s []uint16) []uint16 {
 		}
 	}
 	return s[:sliceLen]
+}
+
+// FingerprintClientHello returns a ClientHelloSpec which is based on the ClientHello that is passed in as the data argument
+//
+// If the ClientHello passed in has extensions that are not recognized or cannot be handled, it will return a non-nil error and a nil *ClientHelloSpec value
+//
+// The data should be the ClientHello record as produced by crypto/tls.clientHelloMsg.marshal()
+// ie. it should not contain the full tls record, just the handshake message as outlined in https://tools.ietf.org/html/rfc5246#section-7.4
+func FingerprintClientHello(data []byte) (*ClientHelloSpec, error) {
+	clientHelloSpec := &ClientHelloSpec{}
+
+	var vers uint16
+
+	s := cryptobyte.String(data)
+	if !s.Skip(4) || // message type and uint24 length field
+		!s.ReadUint16(&vers) || !s.Skip(32) { // 32 byte random
+		return nil, errors.New("unable to read message type, length, and random")
+	}
+	var ignoredSessionID cryptobyte.String
+	if !s.ReadUint8LengthPrefixed(&ignoredSessionID) {
+		return nil, errors.New("unable to read session id")
+	}
+
+	var cipherSuitesBytes cryptobyte.String
+	if !s.ReadUint16LengthPrefixed(&cipherSuitesBytes) {
+		return nil, errors.New("unable to read ciphersuites")
+	}
+	cipherSuites := []uint16{}
+	for !cipherSuitesBytes.Empty() {
+		var suite uint16
+		if !cipherSuitesBytes.ReadUint16(&suite) {
+			return nil, errors.New("unable to read ciphersuite")
+		}
+		cipherSuites = append(cipherSuites, unGREASEUint16(suite))
+	}
+	clientHelloSpec.CipherSuites = cipherSuites
+
+	if !readUint8LengthPrefixed(&s, &clientHelloSpec.CompressionMethods) {
+		return nil, errors.New("unable to read compression methods")
+	}
+
+	if s.Empty() {
+		// ClientHello is optionally followed by extension data
+		return clientHelloSpec, nil
+	}
+
+	var extensions cryptobyte.String
+	if !s.ReadUint16LengthPrefixed(&extensions) || !s.Empty() {
+		return nil, errors.New("unable to read extensions data")
+	}
+
+	for !extensions.Empty() {
+		var extension uint16
+		var extData cryptobyte.String
+		if !extensions.ReadUint16(&extension) ||
+			!extensions.ReadUint16LengthPrefixed(&extData) {
+			return nil, errors.New("unable to read extension data")
+		}
+
+		switch extension {
+		case extensionServerName:
+			// RFC 6066, Section 3
+			var nameList cryptobyte.String
+			if !extData.ReadUint16LengthPrefixed(&nameList) || nameList.Empty() {
+				return nil, errors.New("unable to read server name extension data")
+			}
+			var serverName string
+			for !nameList.Empty() {
+				var nameType uint8
+				var serverNameBytes cryptobyte.String
+				if !nameList.ReadUint8(&nameType) ||
+					!nameList.ReadUint16LengthPrefixed(&serverNameBytes) ||
+					serverNameBytes.Empty() {
+					return nil, errors.New("unable to read server name extension data")
+				}
+				if nameType != 0 {
+					continue
+				}
+				if len(serverName) != 0 {
+					return nil, errors.New("multiple names of the same name_type in server name extension are prohibited")
+				}
+				serverName = string(serverNameBytes)
+				if strings.HasSuffix(serverName, ".") {
+					return nil, errors.New("SNI value may not include a trailing dot")
+				}
+
+				clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &SNIExtension{})
+
+			}
+		case extensionNextProtoNeg:
+			// draft-agl-tls-nextprotoneg-04
+			clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &NPNExtension{})
+
+		case extensionStatusRequest:
+			// RFC 4366, Section 3.6
+			var statusType uint8
+			var ignored cryptobyte.String
+			if !extData.ReadUint8(&statusType) ||
+				!extData.ReadUint16LengthPrefixed(&ignored) ||
+				!extData.ReadUint16LengthPrefixed(&ignored) {
+				return nil, errors.New("unable to read status request extension data")
+			}
+
+			if statusType == statusTypeOCSP {
+				clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &StatusRequestExtension{})
+			} else {
+				return nil, errors.New("status request extension statusType is not statusTypeOCSP")
+			}
+
+		case extensionSupportedCurves:
+			// RFC 4492, sections 5.1.1 and RFC 8446, Section 4.2.7
+			var curvesBytes cryptobyte.String
+			if !extData.ReadUint16LengthPrefixed(&curvesBytes) || curvesBytes.Empty() {
+				return nil, errors.New("unable to read supported curves extension data")
+			}
+			curves := []CurveID{}
+			for !curvesBytes.Empty() {
+				var curve uint16
+				if !curvesBytes.ReadUint16(&curve) {
+					return nil, errors.New("unable to read supported curves extension data")
+				}
+				curves = append(curves, CurveID(unGREASEUint16(curve)))
+			}
+			clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &SupportedCurvesExtension{curves})
+
+		case extensionSupportedPoints:
+			// RFC 4492, Section 5.1.2
+			supportedPoints := []uint8{}
+			if !readUint8LengthPrefixed(&extData, &supportedPoints) ||
+				len(supportedPoints) == 0 {
+				return nil, errors.New("unable to read supported points extension data")
+			}
+			clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &SupportedPointsExtension{supportedPoints})
+
+		case extensionSessionTicket:
+			// RFC 5077, Section 3.2
+			clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &SessionTicketExtension{})
+
+		case extensionSignatureAlgorithms:
+			// RFC 5246, Section 7.4.1.4.1
+			var sigAndAlgs cryptobyte.String
+			if !extData.ReadUint16LengthPrefixed(&sigAndAlgs) || sigAndAlgs.Empty() {
+				return nil, errors.New("unable to read signature algorithms extension data")
+			}
+			supportedSignatureAlgorithms := []SignatureScheme{}
+			for !sigAndAlgs.Empty() {
+				var sigAndAlg uint16
+				if !sigAndAlgs.ReadUint16(&sigAndAlg) {
+					return nil, errors.New("unable to read signature algorithms extension data")
+				}
+				supportedSignatureAlgorithms = append(
+					supportedSignatureAlgorithms, SignatureScheme(sigAndAlg))
+			}
+			clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &SignatureAlgorithmsExtension{supportedSignatureAlgorithms})
+
+		case extensionSignatureAlgorithmsCert:
+			// RFC 8446, Section 4.2.3
+			return nil, errors.New("unsupported extension SignatureAlgorithmsCert")
+
+		case extensionRenegotiationInfo:
+			// RFC 5746, Section 3.2
+			clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &RenegotiationInfoExtension{RenegotiateOnceAsClient})
+
+		case extensionALPN:
+			// RFC 7301, Section 3.1
+			var protoList cryptobyte.String
+			if !extData.ReadUint16LengthPrefixed(&protoList) || protoList.Empty() {
+				return nil, errors.New("unable to read ALPN extension data")
+			}
+			alpnProtocols := []string{}
+			for !protoList.Empty() {
+				var proto cryptobyte.String
+				if !protoList.ReadUint8LengthPrefixed(&proto) || proto.Empty() {
+					return nil, errors.New("unable to read ALPN extension data")
+				}
+				alpnProtocols = append(alpnProtocols, string(proto))
+
+			}
+			clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &ALPNExtension{alpnProtocols})
+
+		case extensionSCT:
+			// RFC 6962, Section 3.3.1
+			clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &SCTExtension{})
+
+		case extensionSupportedVersions:
+			// RFC 8446, Section 4.2.1
+			var versList cryptobyte.String
+			if !extData.ReadUint8LengthPrefixed(&versList) || versList.Empty() {
+				return nil, errors.New("unable to read supported versions extension data")
+			}
+			supportedVersions := []uint16{}
+			for !versList.Empty() {
+				var vers uint16
+				if !versList.ReadUint16(&vers) {
+					return nil, errors.New("unable to read supported versions extension data")
+				}
+				supportedVersions = append(supportedVersions, unGREASEUint16(vers))
+			}
+			clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &SupportedVersionsExtension{supportedVersions})
+
+		case extensionKeyShare:
+			// RFC 8446, Section 4.2.8
+			var clientShares cryptobyte.String
+			if !extData.ReadUint16LengthPrefixed(&clientShares) {
+				return nil, errors.New("unable to read key share extension data")
+			}
+			keyShares := []KeyShare{}
+			for !clientShares.Empty() {
+				var ks KeyShare
+				var group uint16
+				if !clientShares.ReadUint16(&group) ||
+					!readUint16LengthPrefixed(&clientShares, &ks.Data) ||
+					len(ks.Data) == 0 {
+					return nil, errors.New("unable to read key share extension data")
+				}
+				ks.Group = CurveID(unGREASEUint16(group))
+				// if not GREASE, key share data will be discarded
+				// as it should be generated per connection
+				if ks.Group != GREASE_PLACEHOLDER {
+					ks.Data = nil
+				}
+				keyShares = append(keyShares, ks)
+			}
+			clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &KeyShareExtension{keyShares})
+
+		case extensionPSKModes:
+			// RFC 8446, Section 4.2.9
+			pskModes := []uint8{}
+			if !readUint8LengthPrefixed(&extData, &pskModes) {
+				return nil, errors.New("unable to read PSK extension data")
+			}
+			clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &PSKKeyExchangeModesExtension{pskModes})
+
+		case utlsExtensionExtendedMasterSecret:
+			// https://tools.ietf.org/html/rfc7627
+			clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &UtlsExtendedMasterSecretExtension{})
+
+		case utlsExtensionPadding:
+			clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &UtlsPaddingExtension{GetPaddingLen: BoringPaddingStyle})
+
+		case fakeExtensionChannelID:
+			clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &FakeChannelIDExtension{})
+
+		case fakeExtensionChannelIDOld:
+			clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &FakeChannelIDExtension{true})
+
+		case fakeExtensionTokenBinding:
+			var tokenBindingExt FakeTokenBindingExtension
+			var keyParameters cryptobyte.String
+			if !extData.ReadUint8(&tokenBindingExt.MajorVersion) ||
+				!extData.ReadUint8(&tokenBindingExt.MinorVersion) ||
+				!extData.ReadUint8LengthPrefixed(&keyParameters) {
+				return nil, errors.New("unable to read token binding extension data")
+			}
+			tokenBindingExt.KeyParameters = keyParameters
+			clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &tokenBindingExt)
+
+		case fakeRecordSizeLimit:
+			recordSizeExt := new(FakeRecordSizeLimitExtension)
+			if !extData.ReadUint16(&recordSizeExt.Limit) {
+				return nil, errors.New("unable to read record size limit extension data")
+			}
+			clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, recordSizeExt)
+
+		case fakeCertCompressionAlgs:
+			methods := []CertCompressionAlgo{}
+			methodsRaw := new(cryptobyte.String)
+			if !extData.ReadUint8LengthPrefixed(methodsRaw) {
+				return nil, errors.New("unable to read cert compression algorithms extension data")
+			}
+			for !methodsRaw.Empty() {
+				var method uint16
+				if !methodsRaw.ReadUint16(&method) {
+					return nil, errors.New("unable to read cert compression algorithms extension data")
+				}
+				methods = append(methods, CertCompressionAlgo(method))
+			}
+			clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &FakeCertCompressionAlgsExtension{methods})
+
+		case extensionPreSharedKey:
+			// RFC 8446, Section 4.2.11
+			return nil, errors.New("unsupported extension PreSharedKey")
+
+		case extensionCookie:
+			// RFC 8446, Section 4.2.2
+			return nil, errors.New("unsupported extension Cookie")
+
+		case extensionEarlyData:
+			// RFC 8446, Section 4.2.10
+			return nil, errors.New("unsupported extension EarlyData")
+
+		default:
+			if isGREASEUint16(extension) {
+				clientHelloSpec.Extensions = append(clientHelloSpec.Extensions, &UtlsGREASEExtension{unGREASEUint16(extension), extData})
+			} else {
+				return nil, fmt.Errorf("unsupported extension %#x", extension)
+			}
+
+			continue
+		}
+	}
+
+	return clientHelloSpec, nil
 }
